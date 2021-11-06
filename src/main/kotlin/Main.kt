@@ -18,7 +18,7 @@ class Circle : Shape{
 
     constructor(radius: Double){
         if(radius < 0.0)
-            throw Exception()
+            throw Exception("Radius cannot be negative")
         this.radius = radius
     }
 }
@@ -34,7 +34,7 @@ class Square : Shape{
 
     constructor(side: Double){
         if(side < 0.0)
-            throw Exception()
+            throw Exception("Side cannot be negative")
         this.side = side
     }
 }
@@ -51,7 +51,7 @@ class Rectangle : Shape{
 
     constructor(height: Double, width: Double){
         if(height < 0.0 || width < 0.0)
-            throw Exception()
+            throw Exception("Side cannot be negative")
         this.height = height
         this.width = width
     }
@@ -78,9 +78,9 @@ class Triangle : Shape{
 
     constructor(side1: Double, side2: Double, side3: Double){
         if(side1 < 0.0 || side2 < 0.0 || side3 < 0.0)
-            throw Exception()
+            throw Exception("Side cannot be negative")
         if(side1 + side2 <= side3 || side1 + side3 <= side2 || side2 + side3 <= side1)
-            throw Exception()
+            throw Exception("Triangle inequality fails")
         this.side1 = side1
         this.side2 = side2
         this.side3 = side3
