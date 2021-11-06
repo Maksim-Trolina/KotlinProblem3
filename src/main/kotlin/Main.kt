@@ -1,248 +1,232 @@
-import java.util.*
 import kotlin.math.pow
-import kotlin.Exception
+import kotlin.math.sqrt
 
-enum class OperationName {
-    LeftBracket,
-    RightBracket,
-    Minus,
-    Plus,
-    Multiply,
-    Divide,
-    Pow,
-    UnaryMinus,
-    UnaryPlus,
+interface Shape{
+    fun calcArea(): Double
+    fun calcPerimeter(): Double
 }
 
-interface Operation<T>{
-    val name: OperationName
-    val priority: Int
-    fun process(operands: Stack<T>)
-}
+class Circle : Shape{
+    private val radius: Double
 
-class Addition(override val name: OperationName, override val priority: Int) : Operation<Double>{
+    override fun calcArea() : Double = Math.PI * radius.pow(2)
+    override fun calcPerimeter(): Double = 2 * Math.PI * radius
 
-    override fun process(operands: Stack<Double>) {
-        if (operands.size < 2)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        val operand2 = operands.pop()
-        operands.push(operand2 + operand1)
+    override fun toString(): String {
+        return "Circle\nradius: $radius"
     }
 
+    constructor(radius: Double){
+        if(radius < 0.0)
+            throw Exception()
+        this.radius = radius
+    }
 }
+class Square : Shape{
+    private val side: Double
 
-class Subtraction(override val name: OperationName, override val priority: Int) : Operation<Double>{
+    override fun calcArea(): Double = side.pow(2)
+    override fun calcPerimeter(): Double = 4 * side
 
-    override fun process(operands: Stack<Double>) {
-        if (operands.size < 2)
-            throw Exception("")
-        val operand1 = operands.pop()
-        val operand2 = operands.pop()
-        operands.push(operand2 - operand1)
+    override fun toString(): String {
+        return "Square\nside: $side"
     }
 
+    constructor(side: Double){
+        if(side < 0.0)
+            throw Exception()
+        this.side = side
+    }
 }
+class Rectangle : Shape{
+    private val height: Double
+    private val width: Double
 
-class Multiplication(override val name: OperationName, override val priority: Int) : Operation<Double>{
+    override fun calcArea(): Double = height * width
+    override fun calcPerimeter(): Double = 2 * (height + width)
 
-    override fun process(operands: Stack<Double>) {
-        if (operands.size < 2)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        val operand2 = operands.pop()
-        operands.push(operand2 * operand1)
+    override fun toString(): String {
+        return "Rectangle\nheight: $height\nwidth: $width"
     }
 
+    constructor(height: Double, width: Double){
+        if(height < 0.0 || width < 0.0)
+            throw Exception()
+        this.height = height
+        this.width = width
+    }
 }
+class Triangle : Shape{
+    private val side1: Double
+    private val side2: Double
+    private val side3: Double
 
-class Division(override val name: OperationName, override val priority: Int) : Operation<Double>{
+    override fun calcArea(): Double {
+        val semiPerimeter = calcPerimeter() / 2
+        val differenceNumber1 = semiPerimeter - side1
+        val differenceNumber2 = semiPerimeter - side2
+        val differenceNumber3 = semiPerimeter - side3
 
-    override fun process(operands: Stack<Double>) {
-        if (operands.size < 2)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        if (operand1 == 0.0)
-            throw Exception("Trying to divide by zero")
-        val operand2 = operands.pop()
-        operands.push(operand2 / operand1)
+        return sqrt(semiPerimeter * differenceNumber1 * differenceNumber2 * differenceNumber3)
     }
 
-}
+    override fun calcPerimeter(): Double = side1 + side2 + side3
 
-class Exponentiation(override val name: OperationName, override val priority: Int) : Operation<Double>{
-
-    override fun process(operands: Stack<Double>) {
-        if (operands.size < 2)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        val operand2 = operands.pop()
-        if (operand2 == 0.0 && operand1 < 0.0)
-            throw Exception("Trying to raise zero to a negative degree")
-        operands.push(operand2.pow(operand1))
+    override fun toString(): String {
+        return "Triangle\nside1: $side1\nside2: $side2\nside3: $side3"
     }
 
+    constructor(side1: Double, side2: Double, side3: Double){
+        if(side1 < 0.0 || side2 < 0.0 || side3 < 0.0)
+            throw Exception()
+        if(side1 + side2 <= side3 || side1 + side3 <= side2 || side2 + side3 <= side1)
+            throw Exception()
+        this.side1 = side1
+        this.side2 = side2
+        this.side3 = side3
+    }
 }
 
-class UnaryMinus(override val name: OperationName, override val priority: Int) : Operation<Double>{
+interface ShapeFactory {
+    fun createCircle(radius: Double): Circle
+    fun createSquare(side: Double): Square
+    fun createRectangle(height: Double, width: Double): Rectangle
+    fun createTriangle(side1: Double, side2: Double, side3: Double): Triangle
 
-    override fun process(operands: Stack<Double>) {
-        if(operands.size < 1)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        operands.push(-operand1)
+    fun createRandomCircle(): Circle
+    fun createRandomSquare(): Square
+    fun createRandomRectangle(): Rectangle
+    fun createRandomTriangle(): Triangle
+
+    fun createRandomShape(): Shape
+}
+
+class ShapeFactorImpl : ShapeFactory {
+    override fun createCircle(radius: Double): Circle = Circle(radius)
+
+    override fun createSquare(side: Double): Square = Square(side)
+
+    override fun createRectangle(height: Double, width: Double): Rectangle = Rectangle(height, width)
+
+    override fun createTriangle(side1: Double, side2: Double, side3: Double): Triangle = Triangle(side1, side2, side3)
+
+    override fun createRandomSquare(): Square {
+        val side = (1..100).random()
+        return Square(side.toDouble())
     }
 
-}
-
-class UnaryPlus(override val name: OperationName, override val priority: Int) : Operation<Double>{
-
-    override fun process(operands: Stack<Double>) {
-        if(operands.size < 1)
-            throw Exception("Not enough operands")
-        val operand1 = operands.pop()
-        operands.push(operand1)
+    override fun createRandomCircle(): Circle {
+        val radius = (1..100).random()
+        return Circle(radius.toDouble())
     }
 
-}
-
-class LeftBracket(override val name: OperationName, override val priority: Int) : Operation<Double>{
-
-    override fun process(operands: Stack<Double>) {
-        TODO("Not yet implemented")
+    override fun createRandomRectangle(): Rectangle {
+        val height = (1..100).random()
+        val width = (1..100).random()
+        return Rectangle(height.toDouble(), width.toDouble())
     }
 
-}
-
-class RightBracket(override val name: OperationName, override val priority: Int) : Operation<Double>{
-
-    override fun process(operands: Stack<Double>) {
-        TODO("Not yet implemented")
+    override fun createRandomTriangle(): Triangle {
+        val side1 = (1..100).random()
+        val side2 = (1..100).random()
+        val side3 = side1 + side2 - 1
+        return Triangle(side1.toDouble(), side2.toDouble(), side3.toDouble())
     }
 
+    override fun createRandomShape(): Shape {
+        val figureNumber = (1..4).random()
+        if(figureNumber == 1)
+            return createRandomCircle()
+        if(figureNumber == 2)
+            return createRandomSquare()
+        if(figureNumber == 3)
+            return createRandomRectangle()
+        return createRandomTriangle()
+    }
 }
-
-
 
 fun main() {
-    try {
-        print("Enter expression: ")
-        val expression = readLine() ?: return
-        val result = calculateExpression(expression)
-        println("Result: $result")
-    } catch (e: Exception) {
-        println(e.message)
+
+    val factoryShape = ShapeFactorImpl()
+    val listOfShapes = crateListOfShapes(factoryShape)
+    val shapeMinArea = getShapeWithMinArea(listOfShapes)
+    val shapeMaxArea = getShapeWithMaxArea(listOfShapes)
+    val shapeMinPerimeter = getShapeWithMinPerimeter(listOfShapes)
+    val shapeMaxPerimeter = getShapeWithMaxPerimeter(listOfShapes)
+    val sumArea = getSumAreaOfShapes(listOfShapes)
+    val sumPerimeter = getSumPerimeterOfShapes(listOfShapes)
+
+    printAllShapes(listOfShapes)
+
+    println("Sum area: $sumArea")
+    println("Sum perimeter: $sumPerimeter")
+    println("Shape with max area: $shapeMaxArea")
+    println("Shape with min area: $shapeMinArea")
+    println("Shape with max perimeter: $shapeMaxPerimeter")
+    println("Shape with min perimeter: $shapeMinPerimeter")
+}
+
+fun crateListOfShapes(factoryShape: ShapeFactory) : ArrayList<Shape> {
+    val listOfShapes = arrayListOf<Shape>()
+    for(i in 1..8){
+        val shape = factoryShape.createRandomShape()
+        listOfShapes.add(shape)
     }
+    return listOfShapes
 }
 
-fun calculateExpression(expression: String): Double {
-    val operations = Stack<Operation<Double>>()
-    val result = Stack<Double>()
-
-    parseLexemes(expression, operations, result)
-    processRemainingOperations(operations, result)
-
-    return result.pop()
+fun printAllShapes(listOfShapes: ArrayList<Shape>){
+    for(shape in listOfShapes)
+        println(shape)
 }
 
-fun processRemainingOperations(operations: Stack<Operation<Double>>, result: Stack<Double>){
-    while (!operations.isEmpty()){
-        val currentOperation = operations.pop()
-        currentOperation.process(result)
-    }
-    if(result.size != 1)
-        throw Exception("Not enough operands")
+fun getSumAreaOfShapes(listOfShapes: ArrayList<Shape>) : Double{
+    var sumArea = 0.0
+    for(shape in listOfShapes)
+        sumArea += shape.calcArea()
+    return sumArea
 }
 
-fun parseLexemes(expression: String, operations: Stack<Operation<Double>>, result: Stack<Double>){
-    val lexemes = getLexemes(expression)
-    var mayUnary = true
+fun getSumPerimeterOfShapes(listOfShapes: ArrayList<Shape>) : Double{
+    var sumPerimeter = 0.0
+    for(shape in listOfShapes)
+        sumPerimeter += shape.calcPerimeter()
+    return sumPerimeter
+}
 
-    for (lexeme in lexemes) {
-        val operation = convertStringToOperation(lexeme, mayUnary)
-        if (operation != null) {
-            if (operation.name == OperationName.LeftBracket) {
-                processLeftBracket(operations, operation)
-                mayUnary = true
-            } else if (operation.name == OperationName.RightBracket) {
-                processRightBracket(operations, result)
-                mayUnary = false
-            } else {
-                processOtherOperation(operations, result, operation)
-                mayUnary = true
-            }
-        } else {
-            val operand = convertLexemeToOperand(lexeme)
-            result.add(operand)
-            mayUnary = false
-        }
-    }
+fun getShapeWithMinArea(listOfShapes: ArrayList<Shape>) : Shape? {
+    var shapeWithMinArea: Shape? = null
+    for(shape in listOfShapes)
+        if(shapeWithMinArea == null || shapeWithMinArea.calcArea() > shape.calcArea())
+            shapeWithMinArea = shape
+    return shapeWithMinArea
+}
+
+fun getShapeWithMaxArea(listOfShapes: ArrayList<Shape>) : Shape? {
+    var shapeWithMaxArea: Shape? = null
+    for(shape in listOfShapes)
+        if(shapeWithMaxArea == null || shapeWithMaxArea.calcArea() < shape.calcArea())
+            shapeWithMaxArea = shape
+    return shapeWithMaxArea
+}
+
+fun getShapeWithMinPerimeter(listOfShapes: ArrayList<Shape>) : Shape? {
+    var shapeWithMinPerimeter: Shape? = null
+    for(shape in listOfShapes)
+        if(shapeWithMinPerimeter == null || shapeWithMinPerimeter.calcPerimeter() > shape.calcPerimeter())
+            shapeWithMinPerimeter = shape
+    return shapeWithMinPerimeter
+}
+
+fun getShapeWithMaxPerimeter(listOfShapes: ArrayList<Shape>) : Shape? {
+    var shapeWithMaxPerimeter: Shape? = null
+    for(shape in listOfShapes)
+        if(shapeWithMaxPerimeter == null || shapeWithMaxPerimeter.calcPerimeter() < shape.calcPerimeter())
+            shapeWithMaxPerimeter = shape
+    return shapeWithMaxPerimeter
 }
 
 
-fun processLeftBracket(operations: Stack<Operation<Double>>, operation: Operation<Double>){
-    operations.push(operation)
-}
-
-fun processRightBracket(operations: Stack<Operation<Double>>, result: Stack<Double>){
-    while (!operations.isEmpty() && operations.peek().name != OperationName.LeftBracket) {
-        val operation = operations.pop()
-        operation.process(result)
-    }
-    if (operations.isEmpty())
-        throw Exception("Mismatch brackets")
-    operations.pop()
-}
-
-fun processOtherOperation(operations: Stack<Operation<Double>>, result: Stack<Double>, operation: Operation<Double>){
-    while (!operations.isEmpty() && operations.peek().priority >= operation.priority) {
-        val currentOperation = operations.pop()
-        currentOperation.process(result)
-    }
-    operations.push(operation)
-}
-
-fun convertLexemeToOperand(lexeme: String) : Double{
-    if(lexeme == "pi")
-        return Math.PI
-    if(lexeme == "e")
-        return Math.E
-    return lexeme.toDouble()
-}
-
-fun getLexemes(expression: String): List<String> {
-    var newExpression = ""
-    val expressionWithoutSpace = expression.replace(" ", "")
-    for (i in expressionWithoutSpace) {
-        if (convertStringToOperation(i.toString()) != null)
-            newExpression += " $i "
-        else
-            newExpression += i.toString()
-    }
-    return newExpression.trim().split(Regex(" +"))
-}
-
-fun convertStringToOperation(lexeme: String, mayUnary: Boolean = false): Operation<Double>? {
-    if (lexeme == "-" && !mayUnary)
-        return Subtraction(OperationName.Minus, 0)
-    if (lexeme == "+" && !mayUnary)
-        return Addition(OperationName.Plus, 0)
-    if (lexeme == "*")
-        return Multiplication(OperationName.Multiply, 1)
-    if (lexeme == "/")
-        return Division(OperationName.Divide, 1)
-    if (lexeme == "^")
-        return Exponentiation(OperationName.Pow, 1)
-    if (lexeme == "(")
-        return LeftBracket(OperationName.LeftBracket, -1)
-    if (lexeme == ")")
-        return RightBracket(OperationName.RightBracket, -1)
-    if (lexeme == "-" && mayUnary)
-        return UnaryMinus(OperationName.UnaryMinus, 2)
-    if (lexeme == "+" && mayUnary)
-        return UnaryPlus(OperationName.UnaryPlus, 2)
-    return null
-}
 
 
 
